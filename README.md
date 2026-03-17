@@ -2,19 +2,30 @@
 
 Monorepo for the Nonware portfolio platform.
 
-## Apps
+## Structure
 
-- `backend/` — Django backend APIs and business logic
-- `web/` — Next.js frontend
-- `mobile/` — Flutter mobile app
-- `infra/` — deployment and CI/CD related files
+Nonware contains three applications.
 
-## Stack
+backend/ — Django backend APIs  
+web/ — Next.js frontend website  
+mobile/ — Flutter mobile application  
 
+## Tech Stack
+
+Backend
 - Django
-- Next.js
-- Flutter
-- Docker
 - PostgreSQL
-- Google Cloud Run
+- Docker
+
+Frontend
+- Next.js
+- TailwindCSS
+
+Infrastructure
+- Docker
 - GitHub Actions
+- Google Cloud Run
+
+## Development
+
+Run locally using Docker:

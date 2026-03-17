@@ -46,3 +46,4 @@ build/
 # Misc
 coverage/
 dist/
+key.json
