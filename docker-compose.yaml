@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16
+    container_name: nonware-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nonware
+      POSTGRES_USER: nonware
+      POSTGRES_PASSWORD: nonware
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    container_name: nonware-backend
+    command: sh -c "python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    env_file:
+      - ./.env.example
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  web:
+    build:
+      context: ./web
+    container_name: nonware-web
+    command: npm run dev
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
