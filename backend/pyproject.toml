@@ -12,6 +12,7 @@ dependencies = [
     "gunicorn>=23.0,<24.0",
     "whitenoise>=6.9,<7.0",
     "python-dotenv>=1.1,<1.2",
+    "django-ninja>=1.6.1",
 ]
 
 [dependency-groups]
