@@ -16,6 +16,7 @@ env:
   IMAGE: backend
   CLOUD_SQL_INSTANCE: ${{ secrets.GCP_CLOUD_SQL_INSTANCE }}
   GS_BUCKET_NAME: ${{ secrets.GS_BUCKET_NAME }}
+  DJANGO_CORS_ALLOWED_ORIGINS: ${{ secrets.DJANGO_CORS_ALLOWED_ORIGINS }}
 
 jobs:
   deploy:
@@ -91,5 +92,5 @@ jobs:
             --allow-unauthenticated \
             --memory 1Gi \
             --add-cloudsql-instances $CLOUD_SQL_INSTANCE \
-            --set-env-vars $COMMON_ENV_VARS,GS_BUCKET_NAME=$GS_BUCKET_NAME \
+            --set-env-vars $COMMON_ENV_VARS,GS_BUCKET_NAME=$GS_BUCKET_NAME,DJANGO_CORS_ALLOWED_ORIGINS=$DJANGO_CORS_ALLOWED_ORIGINS \
             --service-account nonware-backend@nonware-prod.iam.gserviceaccount.com
