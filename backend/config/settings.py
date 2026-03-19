@@ -6,14 +6,16 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Security
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-dev-key")
 DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
-# ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
-ALLOWED_HOSTS = ["*"]  # or your domain
+ALLOWED_HOSTS = os.getenv(
+    "DJANGO_ALLOWED_HOSTS",
+    "localhost"
+).split(",")
 
-# Application definition
-
+# Applications
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -24,6 +26,8 @@ INSTALLED_APPS = [
 
     "corsheaders",
     "rest_framework",
+    "storages",
+    "ninja",
 
     "apps.core",
     "apps.blog",
@@ -62,7 +66,7 @@ TEMPLATES = [
     },
 ]
 
-
+# Database (Cloud SQL)
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -90,7 +94,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+# CORS
 CORS_ALLOWED_ORIGINS = os.getenv(
     "DJANGO_CORS_ALLOWED_ORIGINS",
     "http://localhost:3000"
@@ -102,8 +106,33 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+# Security for Cloud Run
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
-STATIC_URL = "/static/"
+# Static files → Google Cloud Storage
+GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME")
+GS_LOCATION = "static"
+
+STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+
+STATIC_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/{GS_LOCATION}/"
+
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# media files → Google Cloud Storage
+# DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Performance
+CONN_MAX_AGE = 600
+
+# Logging (Cloud Run reads stdout)
+LOGGING = {
+    "version": 1,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "INFO"},
+}

@@ -14,38 +14,74 @@ env:
   SERVICE: nonware-backend
   REPOSITORY: nonware
   IMAGE: backend
+  CLOUD_SQL_INSTANCE: ${{ secrets.GCP_CLOUD_SQL_INSTANCE }}
+  GS_BUCKET_NAME: ${{ secrets.GS_BUCKET_NAME }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout the repo
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 2️⃣ Authenticate to GCP
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
+      # 3️⃣ Set up gcloud
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
 
+      # 4️⃣ Configure Docker for Artifact Registry
       - name: Configure Docker
         run: gcloud auth configure-docker $REGION-docker.pkg.dev
 
-      - name: Build Image
+      # 5️⃣ Build Docker Image
+      - name: Build Docker Image
         run: |
           docker build \
             -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA \
             -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:latest \
             ./backend
 
-      - name: Push Image
+      # 6️⃣ Push Docker Image
+      - name: Push Docker Image
         run: |
           docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA
           docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:latest
 
+      # 7️⃣ Define environment variables for Cloud Run / migrations
+      - name: Define environment variables
+        run: |
+          COMMON_ENV_VARS="DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},DJANGO_DEBUG=False,DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }},POSTGRES_DB=nonware-db,POSTGRES_USER=nonware,POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }},POSTGRES_HOST=/cloudsql/${{ secrets.GCP_CLOUD_SQL_INSTANCE }},POSTGRES_PORT=5432"
+          echo "COMMON_ENV_VARS=$COMMON_ENV_VARS" >> $GITHUB_ENV
+
+      # 8️⃣ Run Django Migrations as Cloud Run Job (idempotent)
+      - name: Run Django Migrations (Cloud Run Job)
+        run: |
+          # Try replacing the job if it exists, else create
+          gcloud run jobs replace migrate-job \
+            --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA \
+            --region $REGION \
+            --tasks 1 \
+            --set-env-vars $COMMON_ENV_VARS || \
+          gcloud run jobs create migrate-job \
+            --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA \
+            --region $REGION \
+            --tasks 1 \
+            --set-env-vars $COMMON_ENV_VARS
+
+          # Execute the migration job
+          gcloud run jobs execute migrate-job --region $REGION
+
+          # Delete the job to keep environment clean
+          gcloud run jobs delete migrate-job --region $REGION --quiet
+
+      # 9️⃣ Deploy to Cloud Run
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy $SERVICE \
@@ -53,4 +89,7 @@ jobs:
             --region $REGION \
             --platform managed \
             --allow-unauthenticated \
-            --memory 1Gi
+            --memory 1Gi \
+            --add-cloudsql-instances $CLOUD_SQL_INSTANCE \
+            --set-env-vars $COMMON_ENV_VARS,GS_BUCKET_NAME=$GS_BUCKET_NAME \
+            --service-account nonware-backend@nonware-prod.iam.gserviceaccount.com

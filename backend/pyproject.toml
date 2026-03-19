@@ -13,6 +13,8 @@ dependencies = [
     "whitenoise>=6.9,<7.0",
     "python-dotenv>=1.1,<1.2",
     "django-ninja>=1.6.1",
+    "django-storages>=1.14.6",
+    "google-cloud-storage>=3.10.0",
 ]
 
 [dependency-groups]
