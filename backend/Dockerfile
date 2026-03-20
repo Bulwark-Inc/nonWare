@@ -24,6 +24,8 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 
+# Expose port 8080
 EXPOSE 8080
 
+# Run collectstatic and web server
 CMD ["./entrypoint.sh"]
