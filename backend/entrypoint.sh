@@ -35,6 +35,7 @@ EOF
 # -------------------------------
 
 echo "📁 Running collectstatic..."
+python manage.py migrate
 python manage.py collectstatic --noinput --verbosity 2
 
 # -------------------------------

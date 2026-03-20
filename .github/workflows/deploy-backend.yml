@@ -61,30 +61,30 @@ jobs:
           COMMON_ENV_VARS="DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},DJANGO_ENV=prod,DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }},POSTGRES_DB=nonware-db,POSTGRES_USER=nonware,POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }},POSTGRES_HOST=/cloudsql/${{ secrets.GCP_CLOUD_SQL_INSTANCE }},POSTGRES_PORT=5432"
           echo "COMMON_ENV_VARS=$COMMON_ENV_VARS" >> $GITHUB_ENV
 
-      # 8️⃣ Run Django Migrations as Cloud Run Job (idempotent)
-      - name: Run Django Migrations (Cloud Run Job)
-        run: |
-          JOB_NAME=migrate-job
-          IMAGE_URI=$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA
+      # # 8️⃣ Run Django Migrations as Cloud Run Job (idempotent)
+      # - name: Run Django Migrations (Cloud Run Job)
+      #   run: |
+      #     JOB_NAME=migrate-job
+      #     IMAGE_URI=$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA
 
-          # Replace job if it exists, else create it
-          gcloud run jobs replace $JOB_NAME \
-            --image $IMAGE_URI \
-            --region $REGION \
-            --tasks 1 \
-            --set-env-vars $COMMON_ENV_VARS || \
-          gcloud run jobs create $JOB_NAME \
-            --image $IMAGE_URI \
-            --region $REGION \
-            --tasks 1 \
-            --set-env-vars $COMMON_ENV_VARS \
-            --wait
+      #     # Replace job if it exists, else create it
+      #     gcloud run jobs replace $JOB_NAME \
+      #       --image $IMAGE_URI \
+      #       --region $REGION \
+      #       --tasks 1 \
+      #       --set-env-vars $COMMON_ENV_VARS || \
+      #     gcloud run jobs create $JOB_NAME \
+      #       --image $IMAGE_URI \
+      #       --region $REGION \
+      #       --tasks 1 \
+      #       --set-env-vars $COMMON_ENV_VARS \
+      #       --wait
 
-          # Execute the migration job and wait for completion
-          gcloud run jobs execute $JOB_NAME --region $REGION --wait || exit 1
+      #     # Execute the migration job and wait for completion
+      #     gcloud run jobs execute $JOB_NAME --region $REGION --wait || exit 1
 
-          # Delete the job to keep environment clean
-          gcloud run jobs delete $JOB_NAME --region $REGION --quiet
+      #     # Delete the job to keep environment clean
+      #     gcloud run jobs delete $JOB_NAME --region $REGION --quiet
 
       # 9️⃣ Deploy to Cloud Run
       - name: Deploy to Cloud Run
