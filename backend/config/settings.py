@@ -116,7 +116,14 @@ CSRF_COOKIE_SECURE = True
 GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME")
 GS_LOCATION = "static"
 
-STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+    },
+}
 
 STATIC_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/{GS_LOCATION}/"
 

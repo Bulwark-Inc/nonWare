@@ -21,5 +21,24 @@ EOF
 echo "Running collectstatic..."
 python manage.py collectstatic --noinput --verbosity 3 || exit 1
 
+echo "Testing database connection..."
+
+python - <<EOF
+import os
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+django.setup()
+
+from django.db import connection
+
+try:
+    connection.ensure_connection()
+    print("✅ Database connection successful")
+except Exception as e:
+    print("❌ Database connection failed:")
+    print(e)
+EOF
+
 echo "Starting Gunicorn..."
 exec gunicorn config.wsgi:application --bind 0.0.0.0:8080
