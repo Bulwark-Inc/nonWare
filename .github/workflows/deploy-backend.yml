@@ -55,19 +55,11 @@ jobs:
           docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA
           docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:latest
 
-      # 7️⃣ Define environment variables (Consolidated for Job & Service)
+      # 7️⃣ Define environment variables (Flattened for stability)
       - name: Define environment variables
         run: |
-          COMMON_ENV_VARS="DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},\
-          DJANGO_ENV=prod,\
-          DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }},\
-          POSTGRES_DB=nonware-db,\
-          POSTGRES_USER=nonware,\
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }},\
-          POSTGRES_HOST=/cloudsql/${{ secrets.GCP_CLOUD_SQL_INSTANCE }},\
-          POSTGRES_PORT=5432,\
-          GS_BUCKET_NAME=${{ secrets.GS_BUCKET_NAME }},\
-          DJANGO_CORS_ALLOWED_ORIGINS=${{ secrets.DJANGO_CORS_ALLOWED_ORIGINS }}"
+          # Keep this on one single line to prevent shell parsing errors
+          COMMON_ENV_VARS="DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},DJANGO_ENV=prod,DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }},POSTGRES_DB=nonware-db,POSTGRES_USER=nonware,POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }},POSTGRES_HOST=/cloudsql/${{ secrets.GCP_CLOUD_SQL_INSTANCE }},POSTGRES_PORT=5432,GS_BUCKET_NAME=${{ secrets.GS_BUCKET_NAME }},DJANGO_CORS_ALLOWED_ORIGINS=${{ secrets.DJANGO_CORS_ALLOWED_ORIGINS }}"
           
           echo "COMMON_ENV_VARS=$COMMON_ENV_VARS" >> $GITHUB_ENV
 
@@ -77,14 +69,13 @@ jobs:
           JOB_NAME=backend-tasks-job
           IMAGE_URI=$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA
 
-          # Replace or Create the job definition
-          # We use 'sh -c' to chain the migration and static collection
+          # Note: No spaces between the commas in the --args flag
           gcloud run jobs replace $JOB_NAME \
             --image $IMAGE_URI \
             --region $REGION \
             --tasks 1 \
             --add-cloudsql-instances $CLOUD_SQL_INSTANCE \
-            --set-env-vars $COMMON_ENV_VARS \
+            --set-env-vars "$COMMON_ENV_VARS" \
             --command "sh" \
             --args "-c,python manage.py migrate --noinput && python manage.py collectstatic --noinput" || \
           gcloud run jobs create $JOB_NAME \
@@ -92,11 +83,10 @@ jobs:
             --region $REGION \
             --tasks 1 \
             --add-cloudsql-instances $CLOUD_SQL_INSTANCE \
-            --set-env-vars $COMMON_ENV_VARS \
+            --set-env-vars "$COMMON_ENV_VARS" \
             --command "sh" \
             --args "-c,python manage.py migrate --noinput && python manage.py collectstatic --noinput"
 
-          # Execute the job and wait for completion
           gcloud run jobs execute $JOB_NAME --region $REGION --wait
 
       # 9️⃣ Deploy to Cloud Run (Web Service)
