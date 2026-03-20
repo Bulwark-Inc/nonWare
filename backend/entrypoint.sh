@@ -26,7 +26,7 @@ django.setup()
 
 from django.conf import settings
 
-print("STATICFILES_STORAGE:", settings.STATICFILES_STORAGE)
+print("STATICFILES_STORAGE:", settings.STORAGES["staticfiles"])
 print("GS_BUCKET_NAME:", getattr(settings, "GS_BUCKET_NAME", None))
 EOF
 
