@@ -23,12 +23,8 @@ COPY . .
 # Set environment
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Add entrypoint
-COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
-
 # Expose port 8080
 EXPOSE 8080
 
-# Run collectstatic and web server
-CMD ["./entrypoint.sh"]
+# Run app with Gunicorn
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8080"]

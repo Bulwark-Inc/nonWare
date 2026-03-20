@@ -72,11 +72,13 @@ jobs:
             --image $IMAGE_URI \
             --region $REGION \
             --tasks 1 \
+            --add-cloudsql-instances $CLOUD_SQL_INSTANCE \
             --set-env-vars $COMMON_ENV_VARS || \
           gcloud run jobs create $JOB_NAME \
             --image $IMAGE_URI \
             --region $REGION \
             --tasks 1 \
+            --add-cloudsql-instances $CLOUD_SQL_INSTANCE \
             --set-env-vars $COMMON_ENV_VARS \
             --wait
 
