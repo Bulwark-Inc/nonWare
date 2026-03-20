@@ -140,6 +140,7 @@ if not DEBUG and GS_BUCKET_NAME:
         "default": {"BACKEND": "storages.backends.gcloud.GoogleCloudStorage"},
         "staticfiles": {"BACKEND": "storages.backends.gcloud.GoogleCloudStorage"},
     }
+    GS_DEFAULT_ACL = "publicRead"
     STATIC_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/{GS_LOCATION}/"
 else:
     # Local static files

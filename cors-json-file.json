@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://nonware-backend-769145932732.us-central1.run.app"],
+    "method": ["GET", "HEAD", "OPTIONS"],
+    "responseHeader": ["Content-Type", "Authorization", "x-goog-meta-cloud-storage-content-length-range"],
+    "maxAgeSeconds": 3600
+  }
+]
