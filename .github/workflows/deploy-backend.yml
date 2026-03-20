@@ -69,12 +69,11 @@ jobs:
           JOB_NAME=backend-tasks-job
           IMAGE_URI=$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA
 
-          # Note: No spaces between the commas in the --args flag
-          gcloud run jobs replace $JOB_NAME \
+          gcloud run jobs update $JOB_NAME \
             --image $IMAGE_URI \
             --region $REGION \
             --tasks 1 \
-            --add-cloudsql-instances $CLOUD_SQL_INSTANCE \
+            --set-cloudsql-instances $CLOUD_SQL_INSTANCE \
             --set-env-vars "$COMMON_ENV_VARS" \
             --command "sh" \
             --args "-c,python manage.py migrate --noinput && python manage.py collectstatic --noinput" || \
@@ -82,11 +81,12 @@ jobs:
             --image $IMAGE_URI \
             --region $REGION \
             --tasks 1 \
-            --add-cloudsql-instances $CLOUD_SQL_INSTANCE \
+            --set-cloudsql-instances $CLOUD_SQL_INSTANCE \
             --set-env-vars "$COMMON_ENV_VARS" \
             --command "sh" \
             --args "-c,python manage.py migrate --noinput && python manage.py collectstatic --noinput"
 
+          # Execute the job and wait for completion
           gcloud run jobs execute $JOB_NAME --region $REGION --wait
 
       # 9️⃣ Deploy to Cloud Run (Web Service)
